@@ -1,7 +1,15 @@
 public class Card {
-    String suit;
-    String type;
-    Integer value;
+
+    private String suit;
+    private String type;
+    private Integer value;
+
+
+    public Card(String new_suit,String new_type){
+        setSuit(new_suit);
+        setType(new_type);
+    }
+
 
     public String getSuit() {
         return suit;
@@ -17,9 +25,9 @@ public class Card {
 
     public void setType(String type) {
         this.type = type;
-        if (this.type == "Jack" || this.type == "Queen"|| this.type == "King") {
+        if (this.type.equals("Jack") || this.type.equals("Queen") || this.type.equals("King")) {
             this.value = 10;
-        } else if (this.type == "Ace") {
+        } else if (this.type.equals("Ace")) {
             this.value = 11;
         }
         else {
@@ -32,7 +40,7 @@ public class Card {
         return value;
     }
 
-    public void lowerAce() {
-        this.value = 1;
-    }
+    //public void lowerAce() {
+    //    this.value = 1;
+    //}
 }

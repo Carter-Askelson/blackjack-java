@@ -6,18 +6,14 @@ public class Blackjack {
     private static Integer buy_in = 100;
 
     public static void main(String[] args) {
-        // Your code goes here
-        System.out.println("Run Program");
-        
-
-        Random rng = new Random();
+        //Random rng = new Random();
         rules();
         start_round();
     }
 
     private static void start_round() {
         buy_in = 100;
-        System.out.println("");
+        System.out.println("/n");
         if (chips > 99) {
             chips -= buy_in;
             System.out.println("Buy-in is 100 chips.");
@@ -28,39 +24,43 @@ public class Blackjack {
             System.exit(0);
         }
 
-        ArrayList <Card> deck = new ArrayList<>();
-        deck = makeDeck();
+        Deck deck = new Deck();
+
         ArrayList <Card> player_hand = new ArrayList<>();
         ArrayList <Card> opponent_hand = new ArrayList<>();
         //deal 2 cards to player and 1 card to dealer
-        player_hand.add(deck.get(deck.size() -1));
-        deck.remove(deck.size() -1);
-        player_hand.add(deck.get(deck.size() -1));
-        deck.remove(deck.size() -1);
-        opponent_hand.add(deck.get(deck.size() -1));
-        deck.remove(deck.size() -1);
+        player_hand.add(deck.drawCard());
+        player_hand.add(deck.drawCard());
+        opponent_hand.add(deck.drawCard());
         play_round(player_hand, opponent_hand , deck);
     }
 
-    private static void play_round(ArrayList player_hand, ArrayList opponent_hand, ArrayList deck) {
-        ListIterator <Card> player_iterator = player_hand.listIterator();
-        ListIterator <Card> opponent_iterator = opponent_hand.listIterator();
+    private static void play_round(ArrayList<Card> player_hand, ArrayList<Card> opponent_hand, Deck deck) {
+        //example of how to use the iterator version of a for loop
+        //ListIterator <Card> player_iterator = player_hand.listIterator();
         System.out.println("You have:");
-        while (player_iterator.hasNext()) {
-            Card current_card = player_iterator.next();
-            System.out.println(current_card.getType() + " of " + current_card.getSuit());
+        for(Card i : player_hand)
+        {
+            System.out.println(i.getType() + " of " + i.getSuit());
         }
+        //while (player_iterator.hasNext()) {
+          // Card current_card = player_iterator.next();
+          //  System.out.println(current_card.getType() + " of " + current_card.getSuit());
+        //}
         System.out.println("Opponent has:");
-        while (opponent_iterator.hasNext()) {
-            Card current_card = opponent_iterator.next();
-            System.out.println(current_card.getType() + " of " + current_card.getSuit());
+        for(Card i : opponent_hand)
+        {
+            System.out.println(i.getType() + " of " + i.getSuit());
         }
-        playerMove(player_hand, opponent_hand, deck);
-
+        if (buy_in == 200) {
+            end_game(player_hand, opponent_hand, deck);
+        } else {
+            playerMove(player_hand, opponent_hand, deck);
+        }
 
     }
 
-    public static void playerMove(ArrayList player_hand, ArrayList opponent_hand, ArrayList deck) {
+    public static void playerMove(ArrayList player_hand, ArrayList opponent_hand, Deck deck) {
         ArrayList <Integer> scores = checkScore(player_hand, opponent_hand);
         if (scores.get(0) > 21) {
             loseRound(scores.get(0), scores.get(1));
@@ -68,13 +68,17 @@ public class Blackjack {
             winRound(scores.get(0), scores.get(1));
         }
         else {
-            System.out.println("Would you like to Stand (S) or Hit (H)?");
+            System.out.println("Would you like to Stand (S), Hit (H), or Double Down (D)?");
             Scanner scanner = new Scanner(System.in);
             boolean playerHit = false;
+            boolean doubleDown = false;
             while (true) {
                 String input = scanner.next();
                 if (input.equalsIgnoreCase("H")) {
                     playerHit = true;
+                    break;
+                } else if (input.equalsIgnoreCase("D")) {
+                    doubleDown = true;
                     break;
                 } else if (input.equalsIgnoreCase("S")) {
                     break;
@@ -82,19 +86,22 @@ public class Blackjack {
                     System.out.println("Invalid input. Please enter Y or N.");
                 }
             }
-            if (playerHit) {
-                player_hand.add(deck.get(deck.size() - 1));
-                deck.remove(deck.size() - 1);
+            if (doubleDown) {
+                chips -= 100;
+                buy_in = 200;
+            }
+            if (playerHit || doubleDown) {
+                player_hand.add(deck.drawCard());
                 play_round(player_hand, opponent_hand, deck);
-            } else {
+            }
+            else {
                 end_game(player_hand, opponent_hand, deck);
             }
         }
     }
 
-    private static void end_game(ArrayList player_hand, ArrayList opponent_hand, ArrayList deck){
-        opponent_hand.add(deck.get(deck.size() -1));
-        deck.remove(deck.size() -1);
+    private static void end_game(ArrayList player_hand, ArrayList opponent_hand, Deck deck){
+        opponent_hand.add(deck.drawCard());
         Integer last_index = opponent_hand.size() - 1;
         Card last_card = (Card) opponent_hand.get(last_index);
 
@@ -129,59 +136,55 @@ public class Blackjack {
         }
     }
 
-    public static ArrayList checkScore(ArrayList player_hand, ArrayList opponent_hand) {
-        ListIterator <Card> player_iterator = player_hand.listIterator();
-        ListIterator <Card> opponent_iterator = opponent_hand.listIterator();
+    public static ArrayList checkScore(ArrayList<Card> player_hand, ArrayList<Card> opponent_hand) {
         Integer player_sum = 0;
         Integer player_aces = 0;
         Integer opponent_sum = 0;
         Integer opponent_aces = 0;
-        while (player_iterator.hasNext()) {
-            Card current_card = player_iterator.next();
-            player_sum += current_card.getValue();
-            if (current_card.type == "Ace") {
+        for(Card i : player_hand)
+        {
+            player_sum += i.getValue();
+            if (i.getType().equals("Ace")) {
                 player_aces += 1;
             }
         }
-
-        while (opponent_iterator.hasNext()) {
-            Card current_card = opponent_iterator.next();
-            opponent_sum += current_card.getValue();
-            if (current_card.type == "Ace") {
+        for(Card i : opponent_hand)
+        {
+            opponent_sum += i.getValue();
+            if (i.getType().equals("Ace")) {
                 opponent_aces += 1;
-            };
-        }
-
-        if (player_sum < 21) {
-            if (player_aces > 0) {
-                player_sum -= 10;
-                player_aces -= 1;
             }
         }
-
-        if (opponent_sum < 21) {
-            if (opponent_aces > 0) {
-                opponent_sum -= 10;
-                opponent_aces -= 1;
-            }
-        }
+        player_sum = acesCheck(player_sum, player_aces);
+        opponent_sum = acesCheck(opponent_sum, opponent_aces);
         ArrayList <Integer> sums = new ArrayList<>();
         sums.add(player_sum);
         sums.add(opponent_sum);
         return sums;
-
-
     }
 
+    //Saves player or dealer from busting if they have any Aces in their hand (Ace goes from an 11 to a 1)
+    public static Integer acesCheck(Integer sum, Integer aces) {
+        Integer new_sum = sum;
+        while(new_sum < 21) {
+            if (aces > 0) {
+                new_sum -= 10;
+                aces -= 1;
+            } else {
+                break;
+            }
+        }
+        return new_sum;
+    }
 
     public static void loseRound(Integer player_sum, Integer opponent_sum) {
-        System.out.println("Sorry the Dealer had" + opponent_sum + ". While you had " + player_sum);
+        System.out.println("Sorry the Dealer had " + opponent_sum + ". While you had " + player_sum);
         System.out.println("You Lost");
         playAgain();
     }
 
     public static void winRound(Integer player_sum, Integer opponent_sum) {
-        System.out.println("Congratulations! The Dealer had" + opponent_sum + ". While you had " + player_sum);
+        System.out.println("Congratulations! The Dealer had " + opponent_sum + ". While you had " + player_sum);
         if (player_sum == 21) {
             System.out.println("Blackjack!");
             chips += buy_in * 2 + 50;
@@ -195,6 +198,7 @@ public class Blackjack {
     }
 
     public static void playAgain() {
+        buy_in = 100;
         System.out.println("");
         System.out.println("Your current Chip total is " + chips + " chips!");
         System.out.println("Would you like to play again? (Y/N)");
@@ -230,52 +234,6 @@ public class Blackjack {
         System.out.println("You are betting that your hand will be closer to 21 before the House's hand busts, (goes over 21) or stands");
         System.out.println("You start with 1,000 Chips. Playing a round costs 100 Chips, winning a round gains you 200 chips");
         
-    }
-
-    private static Card makeCard(String new_suit, String new_type){
-        Card new_card = new Card();
-        new_card.setSuit(new_suit);
-        new_card.setType(new_type);
-
-        return new_card;
-    }
-
-
-
-    private static ArrayList makeDeck(){
-        ArrayList <Card> new_deck = new ArrayList<>();
-        ArrayList <String> suits = new ArrayList<>();
-        suits.add("clubs");
-        suits.add("spades");
-        suits.add("hearts");
-        suits.add("diamonds");
-        ArrayList <String> types = new ArrayList<>();
-        types.add("2");
-        types.add("3");
-        types.add("4");
-        types.add("5");
-        types.add("6");
-        types.add("7");
-        types.add("8");
-        types.add("9");
-        types.add("10");
-        types.add("Jack");
-        types.add("Queen");
-        types.add("King");
-        types.add("Ace");
-        var suits_iterator = suits.listIterator();
-        var types_iterator = types.listIterator();
-        while (suits_iterator.hasNext()) {
-            String current_suit = suits_iterator.next();
-            types_iterator = types.listIterator();
-            while (types_iterator.hasNext()){
-                String current_type = types_iterator.next();
-                new_deck.add(makeCard(current_suit, current_type));
-            }
-        }
-        Collections.shuffle(new_deck);
-        return new_deck;
-
     }
 }
 
